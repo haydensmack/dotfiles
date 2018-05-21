@@ -39,6 +39,8 @@ nmap \w :setlocal wrap!<CR>:setlocal wrap?<CR>
 nmap \x :cclose<CR>
 nmap \z :w<CR>:!open %<CR><CR>
 
+nmap \L :setlocal relativenumber!<CR>:setlocal relativenumber?<CR>
+
 " Turn off linewise keys. Normally, the `j' and `k' keys move the cursor down one entire line. with
 " line wrapping on, this can cause the cursor to actually skip a few lines on the screen because
 " it's moving from line N to line N+1 in the file. I want this to act more visually -- I want `down'
@@ -174,6 +176,8 @@ autocmd BufEnter *.rb iabbr ppp require 'pp'; pp
 " OPTIONS
 " ----------------------------------------------------------------------------
 
+set listchars=eol:$,tab:>-,trail:~,extends:>,precedes:<
+set list                    " Show invisible characters
 set autoindent              " Carry over indenting from previous line
 set autoread                " Don't bother me hen a file changes
 set autowrite               " Write on :next/:prev/^Z
@@ -218,14 +222,14 @@ set nowritebackup           " No backups made while editing
 set printoptions=paper:letter " US paper
 set ruler                   " Show row/col and percentage
 set scroll=4                " Number of lines to scroll with ^U/^D
-set scrolloff=15            " Keep cursor away from this many chars top/bot
+set scrolloff=999           " Keep cursor away from this many chars top/bot
 set sessionoptions-=options " Don't save runtimepath in Vim session (see tpope/vim-pathogen docs)
 set shiftround              " Shift to certain columns, not just n spaces
 set shiftwidth=2            " Number of spaces to shift for autoindent or >,<
 set shortmess+=A            " Don't bother me when a swapfile exists
 set showbreak=              " Show for lines that have been wrapped, like Emacs
 set showmatch               " Hilight matching braces/parens/etc.
-set sidescrolloff=3         " Keep cursor away from this many chars left/right
+set sidescrolloff=99        " Keep cursor away from this many chars left/right
 set smartcase               " Lets you search for ALL CAPS
 set softtabstop=2           " Spaces 'feel' like tabs
 set suffixes+=.pyc          " Ignore these files when tab-completing
@@ -242,6 +246,30 @@ filetype plugin indent on
 " ----------------------------------------------------------------------------
 " CUSTOM COMMANDS AND FUNCTIONS
 " ----------------------------------------------------------------------------
+
+if !exists('*VCenterCursor')
+  augroup VCenterCursor
+  au!
+  au OptionSet *,*.*
+    \ if and( expand("<amatch>")=='scrolloff' ,
+    \         exists('#VCenterCursor#WinEnter,WinNew,VimResized') )|
+    \   au! VCenterCursor WinEnter,WinNew,VimResized|
+    \ endif
+  augroup END
+  function VCenterCursor()
+    if !exists('#VCenterCursor#WinEnter,WinNew,VimResized')
+      let s:default_scrolloff=&scrolloff
+      let &scrolloff=winheight(win_getid())/2
+      au VCenterCursor WinEnter,WinNew,VimResized *,*.*
+        \ let &scrolloff=winheight(win_getid())/2
+    else
+      au! VCenterCursor WinEnter,WinNew,VimResized
+      let &scrolloff=s:default_scrolloff
+    endif
+  endfunction
+endif
+
+nnoremap <leader>zz :call VCenterCursor()
 
 " I always hit ":W" instead of ":w" because I linger on the shift key...
 command! Q q
@@ -399,20 +427,20 @@ endfunction
 " ----------------------------------------------------------------------------
 
 " Make sure colored syntax mode is on, and make it Just Work with 256-color terminals.
-set background=dark
-let g:rehash256 = 1 " Something to do with Molokai?
-colorscheme molokai
+" set background=dark
+" let g:rehash256 = 1 " Something to do with Molokai?
+colorscheme zellner
 if !has('gui_running')
   let g:solarized_termcolors=256
   if $TERM == "xterm-256color" || $TERM == "screen-256color" || $COLORTERM == "gnome-terminal"
-    set t_Co=256
+    " set t_Co=256
   elseif has("terminfo")
-    colorscheme default
+    colorscheme zellner 
     set t_Co=8
     set t_Sf=[3%p1%dm
     set t_Sb=[4%p1%dm
   else
-    colorscheme default
+    colorscheme zellner
     set t_Co=8
     set t_Sf=[3%dm
     set t_Sb=[4%dm
@@ -554,3 +582,8 @@ endif
 silent! nohlsearch
 
 " vim:set tw=100:
+
+colorscheme ron 
+
+set number
+set relativenumber 
